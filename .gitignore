@@ -55,3 +55,4 @@ application/static
 
 # PyBuilder
 target/
+application/secret_keys.py
