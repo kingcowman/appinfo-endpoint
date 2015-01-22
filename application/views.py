@@ -5,6 +5,16 @@ from models import Application
 
 @app.route("/appinfo", methods=["GET", "POST"])
 def appinfo():
-  return jsonify(status="hello")
+  if request.method =='POST':
+    return jsonify(status="not implemented")
+  else:
+    appInfo = {
+      "schema": "http:openid.net/schema/napps/1.0",
+      "branding": {
+        "companyname": "Virginia Tech",
+        "companyiconurl": "http://www.ABS.com/logo.gif"
+      },
 
-
+      "apps": [x.to_dict() for x in Application.query().fetch()]
+    }
+    return jsonify(appInfo)
