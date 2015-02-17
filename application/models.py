@@ -10,3 +10,8 @@ class Application(ndb.Model):
   bundle_id = ndb.StringProperty()
   custom_uri = ndb.StringProperty()
   
+class User(ndb.Model):
+  name = ndb.StringProperty()
+  email = ndb.StringProperty()
+  userid = ndb.StringProperty()
+  image = ndb.StringProperty()
