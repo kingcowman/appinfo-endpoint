@@ -1,19 +1,20 @@
 from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 from flask import request, render_template, flash, url_for, redirect, jsonify
 from application import app
-from models import Application 
+from models import Application, User
 from google.appengine.api import users
 
 @app.route("/", methods=["GET"])
 def login():
   user = users.get_current_user()
   if user:
-    if not User.query(key=user.key()).fetch():
+
+    if not User.query(User.userid==user.user_id()).fetch():
       a = User()
-      a.name = user.nickname
-      a.email = user.email
-      a.userid = user.userid
-      
+      a.name = user.nickname()
+      a.email = user.email()
+      a.userid = user.user_id()
+      a.put()
     greeting = ('Welcome, %s! (<a href="%s">sign out</a>)' %
                   (user.nickname(), users.create_logout_url('/')))
 
@@ -26,7 +27,6 @@ def login():
 
   return greeting
 
-@app.
 
 @app.route("/appinfo", methods=["GET", "POST"])
 def appinfo():
