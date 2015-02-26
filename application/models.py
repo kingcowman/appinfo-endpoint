@@ -1,4 +1,9 @@
 from google.appengine.ext import ndb
+from flask_oauthlib.provider import OAuth2Provider
+from flask import Flask
+
+app = Flask(__name__)
+oauth = OAuth2Provider(app)
 
 class Application(ndb.Model):
   name = ndb.StringProperty()
@@ -18,69 +23,72 @@ class User(ndb.Model):
 
 class Client(ndb.Model):
   name = ndb.StringProperty()
-  description=ndb.StringProperty()
+  desc = ndb.StringProperty()
   user_id = ndb.StringProperty()
+  user = ndb.StringProperty()
   client_id = ndb.StringProperty()
   client_secret = ndb.StringProperty()
-  is_confident = ndb.BooleanProperty()
+  is_confidential = ndb.BooleanProperty()
+  redirect_uris = ndb.StringProperty()
+  default_scopes = ndb.StringProperty()
 
-  _redirect_uris = ndb.StringProperty()
-  _default_scopes = ndb.StringProperty(
-    )
   @property
   def client_type(self):
     if self.is_confidential:
-    return 'confidential'
-  return 'public'
+      return 'confidential'
+    return 'public'
 
   @property
-  def redirect_uris(self):
-  if self._redirect_uris:
-    return self._redirect_uris.split()
-  return []
+  def Redirect_uris(self):
+    if self.redirect_uris:
+      return self.redirect_uris.split()
+    return []
 
   @property
   def default_redirect_uri(self):
     return self.redirect_uris[0]
 
   @property
-  def default_scopes(self):
-  if self._default_scopes:
-    return self._default_scopes.split()
-  return []
+  def Default_scopes(self):
+    if self.default_scopes:
+      return self.default_scopes.split()
+    return []
 
-  class Grant(ndb.Model):
-    id = ndb.IntegerProperty()
-    user_id = ndb.IntegerProperty()
+class Grant(ndb.Model):
+  id = ndb.StringProperty()
+  user_id = ndb.StringProperty()
+  user = User()
+  client_id = ndb.StringProperty()
+  client = Client()
+  code = ndb.StringProperty()
+  redirect_uri = ndb.StringProperty()
+  expires = ndb.DateTimeProperty()
+  scopes = ndb.StringProperty()
 
-    client_id=ndb.StringProperty()
+  @property
+  def Scopes(self):
+    if self.scopes:
+      return self.scopes.split()
+    return []
 
-    code = ndb.StringProperty()
+  #Gotta be able to delete ourself
 
-    redirect_uri = ndb.StringProperty()
-    expires = ndb.DateTimeProperty()
+class Token(ndb.Model):
+  id = ndb.StringProperty()
+  client_id = ndb.StringProperty()
+  client = Client()
+  user_id = ndb.StringProperty()
+  user = User()
+  token_type = ndb.StringProperty()
+  access_token = ndb.StringProperty()
+  refresh_token = ndb.StringProperty()
+  expires = ndb.DateTimeProperty()
+  scopes = ndb.StringProperty()
 
-    _scopes = ndb.StringProperty()
-    @property
-    def scopes(self):
-      if self._scopes:
-        return self._scopes.split()
-      return []
+  @property
+  def scopes(self):
+    if self.scopes:
+      return self.scopes.split()
+    return []
 
-  class Token(ndb.Model):
-    id = ndb.IntegerProperty()
-    client_id = ndb.StringProperty()
-    user_id = ndb.IntegerProperty()
-    token_type = ndb.StringProperty()
-    access_token = ndb.StringProperty()
-    refresh_token = ndb.StringProperty()
-    id_token = ndb.StringProperty()
-    expires = ndb.DateTimeProperty()
-
-    _scopes = ndb.StringProperty()
-
-    @property
-    def scopes(self):
-      if self._scopes:
-        return self._scopes.split()
-      return [] 
+  #Gotta be able to delete ourself
