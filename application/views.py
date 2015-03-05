@@ -44,6 +44,8 @@ def appinfo():
     }
     return jsonify(appInfo)
 
+#add functionality to ensure a user is logged in
+#clean up and add lots of error checking
 @app.route("/oauth/authorize", methods=['GET', 'POST'])
 def authorize():
   if request.method == 'GET':
@@ -63,22 +65,46 @@ def authorize():
       c.redirect_uris.append(redirect_uri)
       c.default_scopes.append(scope)
       c.user_id = user.user_id()
+      c.client_secret = "abcde12345"  #maybe? and if so is this arbritrary?
 
       client_key = c.put()
 
     #probably should call grant setter if needed, maybe not needed from example
-    code = "abcde12345" #is this arbritrary?
     #state not implemented for now, only when passed from ta
+
     if (client_key == ""):
       temp = Client.query(Client.client_id==client_id).fetch()
       redirect = temp[0].Redirect_uris
-      return redirect[0] + "?code=" + code
+      return redirect[0] + "?code=" + temp[0].client_secret
 
     temp = client_key.get()
     redirect = temp.Redirect_uris
-    return redirect[0] + "?code=" + code
+    return redirect[0] + "?code=" + temp.client_secret
 
-@app.route("/oauth/token")
+@app.route("/oauth/token", methods=['POST'])
 def token_handler():
-  return "Soon"
-  #take in all the parameters and constuct a token to send back
+  if request.method == 'POST':
+    grant_type = request.form['grant_type'] #must be "authorization_code"
+    code = request.form['code']             #must match code we sent
+    redirect_uri = request.form['redirect_uri'] #must match original in authorize
+    client_id = request.form['client_id']   #must be able to authenticate
+
+    temp = Client.query(Client.client_id==client_id).fetch()
+    if not temp:
+      return "Error: Client ID not recognized"
+
+    if not (temp[0].client_secret == code):
+      return "Error: Incorrect Code"
+
+    #check redirect_uri and user
+    #call token setter if possible
+
+    replyDict = {
+      "access_token": "dumby_access_asd123",
+      "toke_type": "Bearer",
+      "refresh_token": "dumby_refresh_mnb987",
+      "expires_in": "3600",   #not gonna be a string
+      "id_token": "dumby_id_zxc456"
+    }
+
+    return jsonify(replyDict)
