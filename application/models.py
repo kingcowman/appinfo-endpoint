@@ -29,8 +29,8 @@ class Client(ndb.Model):
   client_id = ndb.StringProperty()
   client_secret = ndb.StringProperty()
   is_confidential = ndb.BooleanProperty()
-  redirect_uris = ndb.StringProperty()
-  default_scopes = ndb.StringProperty()
+  redirect_uris = ndb.StringProperty(repeated=True)
+  default_scopes = ndb.StringProperty(repeated=True)
 
   @property
   def client_type(self):
@@ -41,7 +41,7 @@ class Client(ndb.Model):
   @property
   def Redirect_uris(self):
     if self.redirect_uris:
-      return self.redirect_uris.split()
+      return self.redirect_uris
     return []
 
   @property
@@ -92,3 +92,7 @@ class Token(ndb.Model):
     return []
 
   #Gotta be able to delete ourself
+
+@oauth.clientgetter
+def load_client(client_id):
+  return Client.query(Client.client_id==client_id).fetch()

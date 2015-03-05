@@ -4,9 +4,6 @@ from application import app
 from models import Application, User, Client, Grant, Token
 from google.appengine.api import users
 
-#app = Flask(__name__)
-#oauth = OAuth2Provider(app)
-
 @app.route("/", methods=["GET"])
 def login():
   user = users.get_current_user()
@@ -50,16 +47,38 @@ def appinfo():
 @app.route("/oauth/authorize", methods=['GET', 'POST'])
 def authorize():
   if request.method == 'GET':
+    user = users.get_current_user()
     client_id = request.args.get('client_id')
     response_type = request.args.get('response_type')
     redirect_uri = request.args.get('redirect_uri')
     scope = request.args.get('scope')
 
-    argDict = {
-      "client_id": client_id,
-      "response_type": response_type,
-      "redirect_uri": redirect_uri,
-      "scope": scope
-    }
+    client_key = ""
 
-    return jsonify(argDict)
+    if not (Client.query(Client.client_id==client_id).fetch()):
+      c = Client()
+      c.redirect_uris = []
+      c.default_scopes = []
+      c.client_id = client_id
+      c.redirect_uris.append(redirect_uri)
+      c.default_scopes.append(scope)
+      c.user_id = user.user_id()
+
+      client_key = c.put()
+
+    #probably should call grant setter if needed, maybe not needed from example
+    code = "abcde12345" #is this arbritrary?
+    #state not implemented for now, only when passed from ta
+    if (client_key == ""):
+      temp = Client.query(Client.client_id==client_id).fetch()
+      redirect = temp[0].Redirect_uris
+      return redirect[0] + "?code=" + code
+
+    temp = client_key.get()
+    redirect = temp.Redirect_uris
+    return redirect[0] + "?code=" + code
+
+@app.route("/oauth/token")
+def token_handler():
+  return "Soon"
+  #take in all the parameters and constuct a token to send back
