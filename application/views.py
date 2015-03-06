@@ -1,8 +1,10 @@
 from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 from flask import request, render_template, flash, url_for, redirect, jsonify, Flask
 from application import app
-from models import Application, User, Client, Grant, Token
+from models import  User, Client, Grant, Token
 from google.appengine.api import users
+from flask_oauthlib.provider import OAuth2Provider
+oauth = OAuth2Provider(app)
 
 @app.route("/", methods=["GET"])
 def login():
@@ -81,6 +83,7 @@ def authorize():
     redirect = temp.Redirect_uris
     return redirect[0] + "?code=" + temp.client_secret
 
+"""
 @app.route("/oauth/token", methods=['POST'])
 def token_handler():
   if request.method == 'POST':
@@ -108,3 +111,63 @@ def token_handler():
     }
 
     return jsonify(replyDict)
+"""
+
+
+@oauth.clientgetter
+def load_client(client_id):
+  return Client.query(Client.client_id==client_id).get()
+
+@oauth.grantgetter
+def load_grant(client_id, code):
+    return Grant.query(Grant.client_id==client_id, Grant.code==code).get()
+
+@oauth.grantsetter
+def save_grant(client_id, code, request, *args, **kwargs):
+    # decide the expires time yourself
+    expires = datetime.utcnow() + timedelta(seconds=100)
+    grant = Grant()
+    grant.client_id = client_id
+    grant.code = code
+    grant.redirect_uri = request.redirect_uri
+    grant.scopes = ' '.join(request.scopes)
+    grant.expires = expires
+    grant.put()
+    return grant
+
+@oauth.tokengetter
+def load_token(access_token=None, refresh_token=None):
+    if access_token:
+        return Token.query(access_token==access_token).get()
+    elif refresh_token:
+        return Token.query(refresh_token==refresh_token).get()
+
+from datetime import datetime, timedelta
+
+@oauth.tokensetter
+def save_token(token, request, *args, **kwargs):
+    toks = Token.query(client_id==request.client.client_id,
+                                 user_id==request.user.id)
+    # make sure that every client has only one token connected to a user
+    for t in toks:
+        t.key.delete()
+
+    expires_in = token.pop['expires_in']
+    expires = datetime.utcnow() + timedelta(seconds=expires_in)
+
+    tok = Token()
+    tok.access_token = token['access_token']
+    tok.refresh_token = token['refresh_token']
+    tok.token_type = token['token_type']
+    tok.scopes = token['scope']
+    tok.expires = expires
+    tok.client_id = request.client_id
+    tok.user_id = request.user_id
+
+    tok.put()
+    return tok
+
+@app.route('/oauth/token')
+@oauth.token_handler
+def access_token():
+    return None

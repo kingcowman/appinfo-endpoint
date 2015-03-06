@@ -1,20 +1,8 @@
 from google.appengine.ext import ndb
 from flask_oauthlib.provider import OAuth2Provider
 from flask import Flask
+from datetime import datetime, timedelta
 
-app = Flask(__name__)
-oauth = OAuth2Provider(app)
-
-class Application(ndb.Model):
-  name = ndb.StringProperty()
-  type = ndb.StringProperty(repeated=True)
-  scope = ndb.StringProperty()
-  default_scopes = ndb.StringProperty(repeated=True)
-  icon_uri = ndb.StringProperty()
-  web_init_ep = ndb.StringProperty()
-  bundle_id = ndb.StringProperty()
-  custom_uri = ndb.StringProperty()
-  
 class User(ndb.Model):
   name = ndb.StringProperty()
   email = ndb.StringProperty()
@@ -63,7 +51,7 @@ class Grant(ndb.Model):
   code = ndb.StringProperty()
   redirect_uri = ndb.StringProperty()
   expires = ndb.DateTimeProperty()
-  scopes = ndb.StringProperty()
+  scopes = ndb.StringProperty(repeated=True)
 
   @property
   def Scopes(self):
@@ -92,7 +80,3 @@ class Token(ndb.Model):
     return []
 
   #Gotta be able to delete ourself
-
-@oauth.clientgetter
-def load_client(client_id):
-  return Client.query(Client.client_id==client_id).fetch()

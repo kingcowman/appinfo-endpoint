@@ -8,7 +8,7 @@ from werkzeug.debug import DebuggedApplication
 from flask_oauthlib.provider import OAuth2Provider
 
 app = Flask('application')
-oauth = OAuth2Provider(app)
+os.environ['DEBUG'] = 'true'
 
 if os.getenv('FLASK_CONF') == 'DEV':
     # Development settings
