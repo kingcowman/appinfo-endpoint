@@ -57,12 +57,22 @@ def client():
   item.client_id = gen_salt(40)
   item.client_secret = gen_salt(50)
   item.user_id = user.user_id()
+  item.redirect_uris.append("https://localhost:8080")
+  item.default_scopes.append("email")
   item.put()
   return jsonify(
     client_id = item.client_id,
     client_secret = item.client_secret
-  )
+  )  
 
+@app.route('/oauth/authorize', methods=['GET', 'POST'])
+@oauth.authorize_handler
+def authorize(*args, **kwargs):
+  user = users.get_current_user()
+  if not user:
+    return redirect('/')
+  if request.method == 'GET':
+    return "Done"
 
 @oauth.clientgetter
 def load_client(client_id):
