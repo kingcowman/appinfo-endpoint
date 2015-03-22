@@ -72,7 +72,9 @@ def authorize(*args, **kwargs):
   if not user:
     return redirect('/')
   if request.method == 'GET':
-    return "Done"
+    client_id = request.args.get('client_id')
+    test = Grant.query(Grant.client_id==client_id).get()
+    return test.code
 
 @oauth.clientgetter
 def load_client(client_id):
