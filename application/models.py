@@ -43,7 +43,7 @@ class Client(ndb.Model):
     return []
 
 class Grant(ndb.Model):
-  id = ndb.StringProperty()
+  #id = ndb.StringProperty()
   user_id = ndb.StringProperty()
   user = User()
   client_id = ndb.StringProperty()
@@ -60,6 +60,8 @@ class Grant(ndb.Model):
     return []
 
   #Gotta be able to delete ourself
+  def delete(self):
+    return self
 
 class Token(ndb.Model):
   id = ndb.StringProperty()
@@ -71,7 +73,7 @@ class Token(ndb.Model):
   access_token = ndb.StringProperty()
   refresh_token = ndb.StringProperty()
   expires = ndb.DateTimeProperty()
-  scopes = ndb.StringProperty()
+  scopes = ndb.StringProperty(repeated=True)
 
   @property
   def scopes(self):

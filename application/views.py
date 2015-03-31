@@ -5,6 +5,7 @@ from models import  User, Client, Grant, Token
 from google.appengine.api import users
 from flask_oauthlib.provider import OAuth2Provider
 from werkzeug.security import gen_salt
+from datetime import datetime, timedelta
 oauth = OAuth2Provider(app)
 
 @app.route("/", methods=["GET"])
@@ -57,7 +58,7 @@ def client():
   item.client_id = gen_salt(40)
   item.client_secret = gen_salt(50)
   item.user_id = user.user_id()
-  item.redirect_uris.append("https://localhost:8080")
+  item.redirect_uris.append("http://localhost:8080/zack")
   item.default_scopes.append("email")
   item.put()
   return jsonify(
@@ -73,7 +74,8 @@ def authorize(*args, **kwargs):
     return redirect('/')
   if request.method == 'GET':
     client_id = request.args.get('client_id')
-    return "done"
+    return True
+  return True
 
 @oauth.clientgetter
 def load_client(client_id):
@@ -86,12 +88,12 @@ def load_grant(client_id, code):
 @oauth.grantsetter
 def save_grant(client_id, code, request, *args, **kwargs):
     # decide the expires time yourself
-    expires = datetime.utcnow() + timedelta(seconds=100)
+    expires = datetime.utcnow() + timedelta(seconds=600)
     grant = Grant()
     grant.client_id = client_id
-    grant.code = code
+    grant.code = code['code']
     grant.redirect_uri = request.redirect_uri
-    grant.scopes = ' '.join(request.scopes)
+    grant.scopes = request.scopes
     grant.expires = expires
     grant.put()
     return grant
@@ -103,24 +105,23 @@ def load_token(access_token=None, refresh_token=None):
     elif refresh_token:
         return Token.query(refresh_token==refresh_token).get()
 
-from datetime import datetime, timedelta
-
 @oauth.tokensetter
 def save_token(token, request, *args, **kwargs):
-    toks = Token.query(client_id==request.client.client_id,
-                                 user_id==request.user.id)
+    toks = Token.query(
+      Token.client_id==request.client.client_id,
+      Token.user_id==request.user.userid)
     # make sure that every client has only one token connected to a user
     for t in toks:
         t.key.delete()
 
-    expires_in = token.pop['expires_in']
+    expires_in = token['expires_in']
     expires = datetime.utcnow() + timedelta(seconds=expires_in)
 
     tok = Token()
     tok.access_token = token['access_token']
     tok.refresh_token = token['refresh_token']
     tok.token_type = token['token_type']
-    tok.scopes = token['scope']
+    #tok.scopes = token['scope']
     tok.expires = expires
     tok.client_id = request.client_id
     tok.user_id = request.user_id
@@ -128,7 +129,13 @@ def save_token(token, request, *args, **kwargs):
     tok.put()
     return tok
 
-@app.route('/oauth/token')
+@app.route('/zack', methods=['GET', 'POST'])
+def test():
+  print("HEERRREEEEE2")
+  return "hey"
+
+@app.route('/oauth/token', methods=['POST'])
 @oauth.token_handler
 def access_token():
-    return None
+  print("YOLO SWAG")
+  return None
