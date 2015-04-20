@@ -3,6 +3,18 @@ from flask_oauthlib.provider import OAuth2Provider
 from flask import Flask
 from datetime import datetime, timedelta
 
+
+class Application(ndb.Model):
+  name = ndb.StringProperty()
+  type = ndb.StringProperty(repeated=True)
+  scope = ndb.StringProperty()
+  default_scopes = ndb.StringProperty(repeated=True)
+  icon_uri = ndb.StringProperty()
+  web_init_ep = ndb.StringProperty()
+  bundle_id = ndb.StringProperty()
+  custom_uri = ndb.StringProperty()
+                    
+
 class User(ndb.Model):
   name = ndb.StringProperty()
   email = ndb.StringProperty()
