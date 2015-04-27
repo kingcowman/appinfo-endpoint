@@ -1,7 +1,7 @@
 from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
 from flask import request, render_template, flash, url_for, redirect, jsonify, Flask
 from application import app
-from models import  User, Client, Grant, Token
+from models import  User, Client, Grant, Token, Application
 from google.appengine.api import users
 from flask_oauthlib.provider import OAuth2Provider
 from werkzeug.security import gen_salt
@@ -48,6 +48,17 @@ def appinfo():
     }
     return jsonify(appInfo)
 
+@app.route("/newapp", methods=["POST"])
+def newapp():
+  app = Application()
+  app.name = request.form["name"]
+  app.type = request.form["type"].split(",") #repeated
+  app.scope = request.form["scope"] 
+  app.default_scopes = request.form["default_scopes"].split(",") #repeated
+  app.icon_uri = request.form["icon"]
+  app.custom_uri = request.form["uri"]
+  app.put()
+  return jsonify(app.to_dict())
 
 @app.route('/client')
 def client():
