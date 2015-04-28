@@ -69,8 +69,8 @@ def client():
   item.client_id = gen_salt(40)
   item.client_secret = gen_salt(50)
   item.user_id = user.user_id()
-  item.redirect_uris.append("http://localhost:8080/zack")
-  item.default_scopes.append("email")
+  item.redirect_uris.append(request.args.get('redirect_uri'))
+  item.default_scopes.append("master")
   item.put()
   return jsonify(
     client_id = item.client_id,
